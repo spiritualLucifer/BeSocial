@@ -11,6 +11,7 @@ const postRoute = require("./routes/posts");
 const conversationRoutes = require("./routes/conversations");
 const messageRoutes = require("./routes/messages");
 const searchRoute = require("./routes/search");
+const forgotePasswordRoute = require("./routes/forgetPassword")
 const cors = require('cors')
 const path = require("path");
 
@@ -55,6 +56,7 @@ app.use("/api/posts", postRoute);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/searchUser",searchRoute);
+app.use("/api/forgetPassword/",forgotePasswordRoute);
 
 
 app.listen(8800, () => {
