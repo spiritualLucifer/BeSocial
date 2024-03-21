@@ -70,8 +70,9 @@ export default function Login() {
             <button className="loginButton" type="submit" disabled={isFetching}>
               {isFetching ? <CircularProgress color="secondary" size="30px" /> : "Log In"}
             </button>
-            
-            {/* <span className="loginForgot">Forgot Password?</span> */}
+            <Link to="/forgotPassword">
+              <span className="loginForgot">Forgot Password?</span>
+            </Link>
             <div className="LoginToAcount" style={{}}>
               Don't have acount?
               <Link to="/register" className="alreadyHaveAccount" style={{textAlign:"center",marginLeft:"2px",width:"auto"}}>
