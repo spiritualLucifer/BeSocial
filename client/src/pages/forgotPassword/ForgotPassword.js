@@ -1,30 +1,37 @@
-import React, { useRef, useState } from 'react'; 
-import { Link, useNavigate } from 'react-router-dom'; 
+import React, { useState } from 'react';
+import {useNavigate } from 'react-router-dom';
+import { CircularProgress } from '@mui/material';
 import axios from 'axios';
-import  "./forgotPassword.css"
-
+import "./forgotPassword.css"
 
 function ForgotPassword() {
-  const email = useRef();
-  const otp = useRef();
-  const [receivedOtp, setReceivedOtp] = useState(null); 
-  const newPassword = useRef();
-  const confirmNewPassword = useRef();
-  const [otpSent, setOtpSent] = useState(false); 
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [receivedOtp, setReceivedOtp] = useState(null);
+  const [newPasswordValue, setNewPasswordValue] = useState('');
+  const [confirmNewPasswordValue, setConfirmNewPasswordValue] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [mailSent, setMailSent] = useState(false);
+  const [mailSentError,setMailSentError] = useState(false);
+  const [otpMatch,setOtpMatch] = useState(true);
   const [otpVerify, setOtpVerify] = useState(false);
+  const [passwordMatch,setPasswordMatch] = useState(true);
   const navigate = useNavigate();
 
   const sendOTP = async () => {
     try {
-      localStorage.setItem("email",email.current?.value);
-      console.log(email.current?.value);
-      const res = await axios.post('/forgetPassword/OptGenerate', { email: email.current?.value });
-      if (res.data === 'Your Email not Found') { 
-        alert('Your email is not registered');
+      localStorage.setItem("email", email);
+      console.log(email);
+      setMailSent(true);
+      const res = await axios.post('/forgetPassword/OptGenerate', { email });
+      if (res.data === 'No User exist') {
+        setMailSentError(true);
+        setMailSent(false);
         localStorage.removeItem("email");
       } else {
-        setReceivedOtp(res.data); 
-        setOtpSent(true); 
+        setMailSent(false);
+        setReceivedOtp(res.data);
+        setOtpSent(true);
       }
     } catch (error) {
       console.log(error);
@@ -32,21 +39,21 @@ function ForgotPassword() {
   };
 
   const verifyOtp = () => {
-    console.log(email.current?.value);
-    if (receivedOtp === otp.current.value) { 
+    
+    if (receivedOtp === otp) {
       setOtpVerify(true);
     } else {
-      alert('Wrong OTP');
+      setOtpMatch(false)
     }
   };
 
   const resetPassword = async () => {
-    console.log(newPassword?.current.value,confirmNewPassword.current?.value,email.current?.value);
+    console.log(newPasswordValue, confirmNewPasswordValue, email);
 
-    if (newPassword.current?.value !== '' && confirmNewPassword.current?.value !== '' && newPassword.current?.value === confirmNewPassword.current?.value) {
+    if (newPasswordValue !== '' && confirmNewPasswordValue !== '' && newPasswordValue === confirmNewPasswordValue) {
       try {
-        const res = await axios.post(`/forgetPassword/setPassword/${localStorage.getItem("email")}`, { newpassword: newPassword.current?.value }); // Corrected interpolation and accessing value
-        if (res.data === 'No User exist') { 
+        const res = await axios.post(`/forgetPassword/setPassword/${localStorage.getItem("email")}`, { newpassword: newPasswordValue });
+        if (res.data === 'No User exist') {
           alert('You Are Not Found in Our Data Base');
         } else {
           navigate('/login');
@@ -55,34 +62,39 @@ function ForgotPassword() {
       } catch (error) {
         console.log(error);
       }
+    }else{
+       setPasswordMatch(false);
     }
   };
 
   return (
     <div className="MainForgotBody">
       <div className='MainForgotBodyWrapper'>
-      {!otpVerify ? (!otpSent ? (
-        <>
-          <input className="MailInput" type="email" ref={email} placeholder="enter Mail" />
-          <button onClick={sendOTP} className="otpSentButton">Send OTP</button>
-        </>
-      ) : (
-        <div className="otpMainBody">
-          <div className="emailSentText">Email sent!</div>
-          <div className='otpMainBodyContent'>
-          <input className="OtpInput" type="text" ref={otp} placeholder="Enter Your 4 Digit OTP" />
-          <button onClick={verifyOtp} className="otpVerifyButton">Verify OTP</button>
+        {!otpVerify ? (!otpSent ? (
+          <>
+            <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" ,padding:"10px"}}>
+              <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>{!mailSentError?(mailSent?(<div style={{width:"30px",height:"30px"}}><CircularProgress color="secondary" size="30px" /></div>):null):<div style={{fontSize:"13px",color:"red",marginLeft:"9px"}}>Your Email Does Not Exist!</div>}</div>
+              <input className="MailInput" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter Your Email" />
+              <button onClick={sendOTP} className="otpSentButton">Send OTP</button>
+            </div>
+          </>
+        ) : (
+          <div className="otpMainBody">
+            {otpMatch?(<div className="emailSentText">Email sent!</div>):<div style={{fontSize:"13px",color:"red",marginLeft:"9px"}}>Wrong Otp!</div>}
+            <div className='otpMainBodyContent'>
+              <input className="OtpInput" type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter Your 4 Digit OTP" />
+              <button onClick={verifyOtp} className="otpVerifyButton">Verify OTP</button>
+            </div>
           </div>
-        </div>
-      )) : (
-        <div className="PasswordBody">
-          <input className="newpassword" type="password" placeholder="New Password" ref={newPassword} /> 
-          <input className="cnewpassword" type="password" placeholder="Confirm New Password" ref={confirmNewPassword} /> 
-          <button onClick={resetPassword} className="passwordResetbutton">Reset Password</button> 
-        </div>
-      )}
+        )) : (
+          <div className="PasswordBody">
+            {!passwordMatch?(<div style={{fontSize:"13px",color:"red",marginLeft:"9px"}}>Comfirm Password Not Matched!</div>):null}
+            <input className="newpassword" type="password" value={newPasswordValue} onChange={(e) => setNewPasswordValue(e.target.value)} placeholder="New Password" />
+            <input className="cnewpassword" type="password" value={confirmNewPasswordValue} onChange={(e) => setConfirmNewPasswordValue(e.target.value)} placeholder="Confirm New Password" />
+            <button onClick={resetPassword} className="passwordResetbutton">Reset Password</button>
+          </div>
+        )}
       </div>
-      
     </div>
   );
 }
