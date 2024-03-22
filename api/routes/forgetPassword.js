@@ -5,7 +5,10 @@ const User = require("../models/User");
 
 router.post('/OptGenerate',async(req,res)=>{
         const email = req.body.email;
-        console.log(email);
+        const user = await User.findOne({email:email})
+        if(!user){
+            return res.status(200).json("No User exist");
+        }
         function generateOTP() {
             const otp = Math.floor(1000 + Math.random() * 9000);
             return otp.toString();

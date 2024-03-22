@@ -280,3 +280,8 @@
 .commentsBottomButton:hover {
   background-color: darkgreen;
 }
+
+.commentsTopWrap{
+  max-height: 200px;
+  overflow-y: scroll;
+}
