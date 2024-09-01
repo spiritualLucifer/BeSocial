@@ -81,7 +81,7 @@ export default function Register() {
                 className="loginInput"
                 onChange={UsernameVerify}
               />
-            {email.current?.value?(emailVerify?<div className="emailVerify" style={{fontSize:"13px",color:"green",marginLeft:"9px"}}>seems good</div>:<div className="emailVerify" style={{fontSize:"13px",color:"red",marginLeft:"9px"}}>this email is already exist!</div>):null}
+            {email.current?.value?(emailVerify?<div className="emailVerify" style={{fontSize:"13px",color:"green",marginLeft:"9px"}}>*seems good</div>:<div className="emailVerify" style={{fontSize:"13px",color:"red",marginLeft:"9px"}}>this email is already exist!</div>):null}
             <input
               placeholder="Email"
               required

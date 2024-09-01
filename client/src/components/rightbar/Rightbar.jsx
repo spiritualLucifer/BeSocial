@@ -5,6 +5,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { Add, Remove } from "@mui/icons-material";
+import AllUsers from "../allusers/AllUsers";
 
 export default function Rightbar({ user }) {
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
@@ -74,7 +75,7 @@ export default function Rightbar({ user }) {
         <h4 className="rightbarTitle">Your Friends</h4>
         <ul className="rightbarFriendList">
           {curUserFreinds?.map((u) => (
-            <Online key={u._id} user={u} />
+            <AllUsers key={u._id} user={u} />
           ))}
         </ul>
       </>

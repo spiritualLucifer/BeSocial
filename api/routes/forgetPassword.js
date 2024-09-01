@@ -2,7 +2,7 @@ const router = require("express").Router();
 const nodemailer = require("nodemailer")
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
-
+let OTP = [];
 router.post('/OptGenerate',async(req,res)=>{
         const email = req.body.email;
         const user = await User.findOne({email:email})
@@ -14,7 +14,7 @@ router.post('/OptGenerate',async(req,res)=>{
             return otp.toString();
         }
         const otp = generateOTP(); 
-
+        OTP.push({email,otp});
         const body = `Your OTP: ${otp}
     
         Please keep this OTP confidential. It's for resetting your password. Use it once within a limited time.
@@ -22,6 +22,7 @@ router.post('/OptGenerate',async(req,res)=>{
         If you didn't request this OTP, please ignore this email.
     
         Thanks.`;
+
         const transport = nodemailer.createTransport({
             service:"gmail",
             auth:{
@@ -44,6 +45,22 @@ router.post('/OptGenerate',async(req,res)=>{
             }
         })
 }) 
+router.post("/confirmOtp", async (req, res) => {
+    console.log(req.body);
+    const email = req.body.email;
+    const otp = req.body.otp;
+    try {
+        const otpIndex = OTP.findIndex(record => record.email === email && record.otp === otp);
+        if (otpIndex !== -1) {
+            OTP.splice(otpIndex, 1);
+            res.status(200).json("Otp Verified");
+        } else {
+            res.status(200).json("Wrong Otp");
+        }
+    } catch (error) {
+        res.status(500).json({ error: "An error occurred while verifying OTP" });
+    }
+});
 
 router.post("/setPassword/:email",async(req,res)=>{
       const newPassword = req.body.newpassword;

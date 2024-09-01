@@ -66,6 +66,7 @@ export default function Post({ post, fetchPosts }) {
   const confrimationHandler = () => {
     setConfirmation(!confirmation);
   }
+  
   const handleDelete = async () => {
     try {
       const res = await axios.delete(`/posts/${post._id}`, { data: { userId: currentUser._id } });
