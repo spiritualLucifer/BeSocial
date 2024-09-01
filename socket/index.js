@@ -33,13 +33,12 @@ const io = require("socket.io")(8900, {
      // typing
      socket.on("typing",(conversation)=>{
         const  user=getUser(conversation.receiverId);
-        console.log(user);
         io.to(user?.socketId).emit("setTping",{isTyping:true,receiverId:conversation.receiverId,senderId:conversation.senderId});
      })
      
      socket.on("stopTyping",(conversation)=>{
       const  user=getUser(conversation.receiverId);
-      io.to(user?.socketId).emit("setTping",{isTyping:false,receiverId:conversation.receiverId,senderId:conversation.senderId});
+      io.to(user?.socketId).emit("setTping",{isTyping:false,receiverId :conversation.receiverId,senderId:conversation.senderId});
    })
 
 
@@ -53,7 +52,36 @@ const io = require("socket.io")(8900, {
         text,
       });
     });
-  
+
+
+    //send Offer 
+    socket.on("offer:send",({offer,to,from})=>{
+      const To = getUser(to);
+      io.to(To?.socketId).emit("offer:recieved",{offer,from});
+    })
+
+    //send Asnwer
+    socket.on("answer:send",({ans,to,from})=>{
+      const To = getUser(to);
+      io.to(To?.socketId).emit("answer:recieved",{ans,from});
+    })
+
+     // negotiation offer
+     socket.on("nego:offer:send",({from,to,offer})=>{
+          const To = getUser(to);
+          // console.log(offer,from,to)
+          // console.log(To)
+          io.to(To?.socketId).emit("nego:Offer:recieved",{from,offer});
+     })
+
+     //send nego answer
+     socket.on("nego:ans:send",({ans,to,from})=>{
+      console.log(to);
+      const To = getUser(to);
+      console.log(To+"Ans");
+      io.to(To?.socketId).emit("nego:ans:recieved",{ans,from});
+    })
+    
     // when disconnect
     socket.on("disconnect", () => {
       console.log("a user disconnected!");

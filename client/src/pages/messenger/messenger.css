@@ -32,8 +32,13 @@
     .topProfile{
         display: flex;
         align-items: center;
+        justify-content:space-between ;
         padding: 15px;
         background-color: rgb(224, 223, 223);
+    }
+    .topProfileLeft{
+        display: flex;
+        align-items: center;
     }
     .topProfileImg{
         width: 40px;

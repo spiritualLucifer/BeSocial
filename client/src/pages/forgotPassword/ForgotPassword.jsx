@@ -38,17 +38,22 @@ function ForgotPassword() {
     }
   };
 
-  const verifyOtp = () => {
-    
-    if (receivedOtp === otp) {
-      setOtpVerify(true);
-    } else {
-      setOtpMatch(false)
-    }
+  const verifyOtp = async() => {
+     try {
+      const res = await axios.post('/forgetPassword/confirmOtp', { email,otp });
+       if(res.data === "Otp Verified"){
+          setOtpVerify(true);
+        }else{
+          setOtpMatch(false);
+          setOtpVerify(false);
+        }
+     } catch (error) {
+      console.log(error)
+     }
   };
 
   const resetPassword = async () => {
-    console.log(newPasswordValue, confirmNewPasswordValue, email);
+    // console.log(newPasswordValue, confirmNewPasswordValue, email);
 
     if (newPasswordValue !== '' && confirmNewPasswordValue !== '' && newPasswordValue === confirmNewPasswordValue) {
       try {
@@ -63,11 +68,11 @@ function ForgotPassword() {
         console.log(error);
       }
     }else{
-       setPasswordMatch(false);
+      setPasswordMatch(false);
     }
   };
-
-  return (
+  
+  return (  
     <div className="MainForgotBody">
       <div className='MainForgotBodyWrapper'>
         {!otpVerify ? (!otpSent ? (
