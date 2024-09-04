@@ -1,61 +1,86 @@
 import axios from "axios";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import "./register.css";
 import { useNavigate } from 'react-router-dom';
-import {Link} from "react-router-dom"
+import { Link } from "react-router-dom";
+import { CircularProgress } from '@mui/material';
 
 export default function Register() {
-  const username = useRef();
-  const email = useRef();
-  const password = useRef();
-  const passwordAgain = useRef();
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordAgain, setPasswordAgain] = useState("");
   const navigate = useNavigate();
-  const [emailVerify,setEmailVerify] = useState(false);
-  const [usernamVerify,setUsernameVerify] = useState(false);
+  const [emailVerify, setEmailVerify] = useState(false);
+  const [usernameVerify, setUsernameVerify] = useState(false);
+  const [sentOtp, setSentOtp] = useState(false);
+  const [otpInput, setOtpInput] = useState("");
+  const [otpError, setOtpError] = useState(false);
+  const [loader,setLoader] = useState(false);
 
-  const EmailVerify = async(e) =>{
-      const newEmail = email.current?.value;
-      try {
-         const res = await axios.post("/auth/emailVerify",{email:newEmail});
-         if(res.status==201){
-          setEmailVerify(true);
-         }else{
-          setEmailVerify(false);
-         }
-      } catch (error) {
-        console.log(error)
-      }
-  }
-
-  const UsernameVerify = async(e) =>{
-    const newUsername = username.current?.value.trim();
+  const EmailVerify = async (e) => {
+    setEmail(e.target.value);
     try {
-       const res = await axios.post("/auth/usernameVerify",{username:newUsername});
-       if(res.status==201){
-        setUsernameVerify(true);
-       }else{
-        setUsernameVerify(false);
-       }
+      const res = await axios.post("/auth/emailVerify", { email:email.trim() });
+      setEmailVerify(res.status === 201);
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      setEmailVerify(false);
     }
-}
-  const handleClick = async (e) => {
+  };
+
+  const UsernameVerify = async (e) => {
+    setUsername(e.target.value);
+    try {
+      const res = await axios.post("/auth/usernameVerify", { username:username.trim() });
+      setUsernameVerify(res.status === 201);
+    } catch (error) {
+      console.log(error);
+      setUsernameVerify(false);
+    }
+  };
+
+  const verifyAndCreate = async (e) => {
     e.preventDefault();
-    if (passwordAgain.current.value !== password.current.value) {
-      passwordAgain.current.setCustomValidity("Passwords don't match!");
-      e.target.reportValidity();
-    } else if(emailVerify && usernamVerify) {
-      const user = {
-        username: username.current.value.trim(),
-        email: email.current.value.trim(),
-        password: password.current.value.trim(),
-      };
+    try {
+      const res = await axios.post('/registerOtp/confirmOtp', { email:email.trim(), otp: otpInput.trim() });
+      if (res.data === "Otp Verified") {
+        const user = {
+          username:username.trim(),
+          email:email.trim(),
+          password:password.trim(),
+        };
+        try {
+          await axios.post("/auth/register", user);
+          navigate('/login');
+        } catch (err) {
+          console.log(err);
+        }
+        setOtpError(false);
+        setOtpInput("");
+      } else {
+        setOtpError(true);
+        setOtpInput("");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleOtp = async (e) => {
+    e.preventDefault();
+    setLoader(true);
+    if (password.trim() !== passwordAgain.trim()) {
+      alert("Passwords don't match!");
+    } else if (emailVerify && usernameVerify) {
       try {
-        await axios.post("/auth/register", user);
-        navigate('/login');
-      } catch (err) {
-        console.log(err);
+        const res = await axios.post('/registerOtp/OptGenerate', { email : email.trim()});
+        if(res.data !== "No User exist"){
+          setSentOtp(true);
+          setLoader(false)
+        }
+      } catch (error) {
+        console.log(error);
       }
     }
   };
@@ -66,52 +91,82 @@ export default function Register() {
         <div className="loginLeft">
           <h3 className="loginLogo">BeSocial</h3>
           <span className="loginDesc">
-          Social media is about sociology and psychology more than technology.
+            Social media is about sociology and psychology more than technology.
           </span>
         </div>
         <div className="loginRight">
-          <form className="loginBox" onSubmit={handleClick}>
-              {username.current?.value?(usernamVerify?<div className="usernameVerify" style={{fontSize:"13px",color:"green",marginLeft:"9px"}}>*seems good</div>:<div className="usernameVerify" style={{fontSize:"13px",color:"red",marginLeft:"9px"}}>this username is already taken!! try another one</div>):null}
-              <input
-                placeholder="Username"
-                required
-                ref={username}
-                min={4}
-                max={20}
-                className="loginInput"
-                onChange={UsernameVerify}
-              />
-            {email.current?.value?(emailVerify?<div className="emailVerify" style={{fontSize:"13px",color:"green",marginLeft:"9px"}}>*seems good</div>:<div className="emailVerify" style={{fontSize:"13px",color:"red",marginLeft:"9px"}}>this email is already exist!</div>):null}
-            <input
-              placeholder="Email"
-              required
-              ref={email}
-              className="loginInput"
-              type="email"
-              onChange={EmailVerify}
-            />
-
-            <input
-              placeholder="Password"
-              required
-              ref={password}
-              className="loginInput"
-              type="password"
-              minLength="6"
-            />
-            <input
-              placeholder="Password Again"
-              required
-              ref={passwordAgain}
-              className="loginInput"
-              type="password"
-            />
-            <button className="loginButton" type="submit">
-              Sign Up
-            </button>
-            <div className="LoginToAcount" style={{}}>
-              already have acount?
-              <Link to="/login" className="alreadyHaveAccount" style={{textAlign:"center",marginLeft:"2px",width:"auto"}}>
+          <form className="loginBox" onSubmit={handleOtp}>
+            {!sentOtp ? (
+              <>
+                {username.length > 0 && (
+                  <div className="usernameVerify" style={{ fontSize: "13px", color: usernameVerify ? "green" : "red", marginLeft: "9px" }}>
+                    {usernameVerify ? "*seems good" : "This username is already taken! Try another one."}
+                  </div>
+                )}
+                <input
+                  placeholder="Username"
+                  required
+                  value={username}
+                  minLength={4}
+                  maxLength={20}
+                  className="loginInput"
+                  onChange={UsernameVerify}
+                />
+                {email.length > 0 && (
+                  <div className="emailVerify" style={{ fontSize: "13px", color: emailVerify ? "green" : "red", marginLeft: "9px" }}>
+                    {emailVerify ? "*seems good" : "This email already exists!"}
+                  </div>
+                )}
+                <input
+                  placeholder="Email"
+                  required
+                  value={email}
+                  className="loginInput"
+                  type="email"
+                  onChange={EmailVerify}
+                />
+                <input
+                  placeholder="Password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="loginInput"
+                  type="password"
+                  minLength="6"
+                />
+                <input
+                  placeholder="Password Again"
+                  required
+                  value={passwordAgain}
+                  onChange={(e) => setPasswordAgain(e.target.value)}
+                  className="loginInput"
+                  type="password"
+                />
+                <button className="loginButton" type="submit">
+                  {loader?<CircularProgress color="secondary" size="30px" />:("Sign Up")}
+                </button>
+              </>
+            ) : (
+              <div className="loginRight" style={{ padding: "20%" }}>
+                {!otpError ? (
+                  <div style={{ textAlign: "center", fontSize: "large" }}>Email Sent!</div>
+                ) : (
+                  <div style={{ textAlign: "center", fontSize: "large", color: "red" }}>Wrong OTP!</div>
+                )}
+                <input
+                  type="text"
+                  placeholder="ENTER OTP"
+                  className="loginInput"
+                  onChange={(e) => setOtpInput(e.target.value)}
+                  style={{ marginBottom: "20px", textAlign: "center" }}
+                  value={otpInput}
+                />
+                <button className="loginButton" onClick={verifyAndCreate}>Verify</button>
+              </div>
+            )}
+            <div className="LoginToAccount">
+              Already have an account?
+              <Link to="/login" className="alreadyHaveAccount" style={{ textAlign: "center", marginLeft: "2px", width: "auto" }}>
                 Login
               </Link>
             </div>

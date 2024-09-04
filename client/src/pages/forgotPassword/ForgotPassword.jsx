@@ -7,7 +7,7 @@ import "./forgotPassword.css"
 function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  const [receivedOtp, setReceivedOtp] = useState(null);
+  // const [receivedOtp, setReceivedOtp] = useState(null);
   const [newPasswordValue, setNewPasswordValue] = useState('');
   const [confirmNewPasswordValue, setConfirmNewPasswordValue] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -30,7 +30,7 @@ function ForgotPassword() {
         localStorage.removeItem("email");
       } else {
         setMailSent(false);
-        setReceivedOtp(res.data);
+        // setReceivedOtp(res.data);
         setOtpSent(true);
       }
     } catch (error) {
